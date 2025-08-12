@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>File Compressor - Download</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f7f8;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: white;
+      padding: 30px 40px;
+      border-radius: 10px;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+      width: 400px;
+      text-align: center;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    #progressBar {
+      width: 100%;
+      background-color: #ddd;
+      border-radius: 8px;
+      overflow: hidden;
+      margin: 20px 0;
+      height: 25px;
+    }
+    #progressBar div {
+      height: 100%;
+      width: 0%;
+      background-color: #007bff;
+      transition: width 0.3s ease;
+    }
+    button {
+      background-color: #007bff;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 8px;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+      display: none;
+    }
+    button:disabled {
+      background-color: #99c2ff;
+      cursor: not-allowed;
+    }
+    button:hover:not(:disabled) {
+      background-color: #0056b3;
+    }
+    .footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Preparing your file...</h1>
+    <div id="progressBar"><div></div></div>
+    <a id="downloadLink" href="#" download>
+      <button id="downloadBtn" disabled>Download Compressed File</button>
+    </a>
+    <div class="footer">
+      <p>Powered by Ashish Kumar Panda</p>
+    </div>
+  </div>
+
+  <script>
+    const progressBarFill = document.querySelector('#progressBar div');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const downloadLink = document.getElementById('downloadLink');
+
+    let progress = 0;
+    // Extract fileId from URL query param, e.g. download.html?fileId=abcd1234
+    const urlParams = new URLSearchParams(window.location.search);
+    const fileId = urlParams.get('fileId');
+
+    if (!fileId) {
+      alert('File ID missing in URL');
+      progressBarFill.style.backgroundColor = 'red';
+      document.querySelector('h1').textContent = 'Error: No file ID provided';
+    } else {
+      // Fake progress bar increment until 90%, then poll server for real status
+      function fakeProgress() {
+        if (progress < 90) {
+          progress += Math.floor(Math.random() * 10) + 5; // 5-14%
+          if(progress > 90) progress = 90;
+          progressBarFill.style.width = progress + '%';
+          setTimeout(fakeProgress, 300);
+        } else {
+          checkFileReady();
+        }
+      }
+
+      function checkFileReady() {
+        fetch(`/check_ready/${fileId}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.ready) {
+              progressBarFill.style.width = '100%';
+              downloadBtn.disabled = false;
+              downloadBtn.style.display = 'inline-block';
+              downloadLink.href = `/download_file/${fileId}`;
+              document.querySelector('h1').textContent = "Your file is ready!";
+            } else {
+              setTimeout(checkFileReady, 1000);
+            }
+          }).catch(() => {
+            setTimeout(checkFileReady, 2000);
+          });
+      }
+
+      fakeProgress();
+    }
+  </script>
+</body>
+</html>
